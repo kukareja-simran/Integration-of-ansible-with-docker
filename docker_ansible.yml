@@ -1,0 +1,65 @@
+- name: "Integration of Docker with ansible"
+  hosts: all
+  tasks:
+     - name: Adding Docker repository
+       yum_repository:
+              name: Docker
+              description: docker repo
+              baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+              gpgcheck: no 
+              enabled: yes
+       register: a
+     - debug:
+             var: a
+     - name: Installing docker package
+       command: "yum install docker-ce -y --nobest"
+       register: b
+     - debug:
+             var: b
+     - name: Start docker service
+       service:
+               name: "docker"
+               state: started 
+               enabled: yes
+       register: c
+     - debug:
+             var: c
+             
+     - name: Installing Docker SDK 
+       command: pip3 install docker 
+       register: d
+     - debug:
+             var: d
+             
+     - name: Pull image of httpd
+       docker_image: 
+               name: httpd
+               source: pull
+       register: e
+     - debug:
+             var: e
+     - name: Creating folder
+       file:
+               path: /ansible
+               state: directory
+       register: f
+     - debug:
+             var: f
+     - name: Copy web page
+       copy:
+               src: rh.html 
+               dest: /ansible
+       register: g
+     - debug:
+             var: g
+     - name: Crieating Container
+       docker_container:
+               name: Webserver
+               image: httpd
+               state: started
+               exposed_ports: "80"
+               ports: "8888:80"
+               volumes: /ansible_l:/usr/local/apache2/htdocs/
+       register: h
+     - debug:
+             var: h
